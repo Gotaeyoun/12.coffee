@@ -74,7 +74,6 @@ var Slide = (function(){
 			$(obj.slide[now]).appendTo(obj.container);
 		}
 		function ani() {
-			console.log(	$(obj.slide)	);
 			$(obj.slide[now]).appendTo(obj.container).css({"opacity": 0, "transform": "scale(1.2)"});
 			setTimeout(function(){
 				obj.container.find(".slide").eq(0).css({"opacity": 0, "transform": "scale(0.7)"});
