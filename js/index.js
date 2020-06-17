@@ -20,6 +20,7 @@ $btRight.css("right", "2rem");
 /******************* 전역설정 ********************/
 //Slide.scale(".main-wrap", ".banner", onComplete);
 //Slide.scale(".main-wrap2", ".banner", onComplete);
+var KAKAO_KEY = '12e6cd485768844b777a5601478249ce';
 
 
 /******************* 슬라이드 객체형 ********************/
@@ -32,7 +33,6 @@ function onComplete(prevSlide, nextSlide, container) {
 	$(nextSlide).find(".writer").css({"opacity": 1, "transform": "translateY(0)"});
 }
 */
-
 /******************* 슬라이드 직접코딩 ********************/
 var mainNow = 0;
 var mainSlide = $(".main-wrap > .banner");
@@ -87,6 +87,127 @@ $(".main-wrap > .bt-prev").click(onMainPrev);
 $(".main-wrap > .bt-next").click(onMainNext);
 
 
+/******************* 슬라이드 직접코딩2 ********************/
+var prdNow = 0,  prdSize = 6, prdLast, prdLeft, prdTar;
+var prds = [], prdArr = [];
+$(".prd-wrapper > .bt-left").click(onPrdLeft);
+$(".prd-wrapper > .bt-right").click(onPrdRight);
+
+$.get("../json/prds.json", onPrdLoad);
+function onPrdLoad(r) {
+	prdLast = r.prds.length - 1;
+	var html = '';
+	for(var i in r.prds) {
+		html  = '<li class="prd">';
+		html += '	<div class="prd-img"><img src="'+r.prds[i].src+'" class="img"></div>';
+		html += '	<div class="prd-title">'+r.prds[i].title+'</div>';
+		html += '	<div class="prd-price">'+r.prds[i].price+'</div>';
+		html += '</li>';
+		prds.push($(html));		
+	}
+	prdInit();
+}
+
+function prdInit() {
+	prdArr = [];
+	prdArr[1] = prdNow;
+	prdArr[0] = (prdNow == 0) ? prdLast : prdNow - 1;
+	for(var i=2; i<prdSize; i++) prdArr[i] = (prdArr[i-1] == prdLast) ? 0 : prdArr[i-1] + 1;
+	for(var i=0; i<prdArr.length; i++) $(prds[prdArr[i]]).clone().appendTo(".prd-wrap");
+}
+
+function onPrdLeft() {
+	prdTar = 0;
+	prdNow = (prdNow == 0) ? prdLast : prdNow - 1;
+	prdAni();
+}
+
+function onPrdRight() {
+	prdTar = prdLeft * 2 + "%";
+	prdNow = (prdNow == prdLast) ? 0 : prdNow + 1;
+	prdAni();
+}
+
+function prdAni() {
+	$(".prd-wrap").stop().animate({"left": prdTar}, 500, function(){
+		$(this).empty().css({"left": prdLeft+"%"});
+		prdInit();
+	});
+}
+
+/******************* Location 동적 생성 ********************/
+$.get("../json/locations.json", onLocationLoad);
+function onLocationLoad(r) {
+	var html = '';
+	for(var i in r.locs) {
+		html  = '<li class="store">';
+		html += '<div class="photo"><img src="'+r.locs[i].src+'" class="img"></div>';
+		html += '<p class="cont">'+r.locs[i].cont+'</p>';
+		html += '<div class="addr">';
+		html += '<i class="fa fa-map-marker-alt"></i>';
+		html += '<span class="rc">Address: '+r.locs[i].addr+'</span>';
+		html += '</div>';
+		html += '<div class="time">';
+		html += '<i class="fa fa-clock"></i>';
+		html += '<span class="rc">Open: '+r.locs[i].time+'</span>';
+		html += '</div>';
+		html += '<div class="tel">';
+		html += '<i class="fa fa-phone"></i>';
+		html += '<span class="rc">Phone: '+r.locs[i].tel+'</span>';
+		html += '</div>';
+		html += '<button data-lat="'+r.locs[i].lat+'" data-lon="'+r.locs[i].lon+'" class="bt-map bt-yellow">See on Map</button>';
+		html += '</li>';
+		$(".store-wrap").append(html);
+	}
+	$(".store-wrap").find(".bt-map").click(onMapOpen);
+	$(".modal-map").find(".bt-close").click(onMapClose);
+	$(".modal-map").click(onMapClose);
+	$(".modal-map .modal-wrap").click(onModalWrap);
+	$(".modal-map").on("mousewheel", onModalWheel);
+	$(".modal-map").on("DOMMouseScroll", onModalWheel);
+}
+
+function onModalWheel(e) {
+	e.stopPropagation();
+	e.preventDefault();
+}
+
+function onModalWrap(e) {
+	e.stopPropagation();
+}
+
+function onMapOpen() {
+	$(".modal-map").css({"display": "flex", "opacity": 0}).stop().animate({"opacity": 1}, 500);
+	var lat = $(this).data("lat");
+	var lon = $(this).data("lon");
+	var container = document.getElementById('map');
+	var options = {center: new kakao.maps.LatLng(lat, lon), level: 2};
+	var map = new kakao.maps.Map(container, options);
+	var markerPosition  = new kakao.maps.LatLng(lat, lon); 
+	var marker = new kakao.maps.Marker({ position: markerPosition });
+	marker.setMap(map);
+}
+
+function onMapClose() {
+	$(".modal-map").stop().animate({"opacity": 0}, 500, function(){
+		$(this).css("display", "none");
+	});
+}
+
+/******************* Menu 동적 생성 ********************/
+$.get("../json/menus.json", onMenuLoad);
+function onMenuLoad(r) {
+	var html = '';
+	for(var i in r.menus) {
+		html  = '<li class="menu clear">';
+		html += '<div class="menu-img"><img src="'+r.menus[i].src+'" class="img"></div>';
+		html += '<h3 class="menu-title rc">'+r.menus[i].title+'</h3>';
+		html += '<div class="menu-price rc">'+r.menus[i].price+'</div>';
+		html += '</li>';
+		$(".menus").append(html);
+	}
+}
+
 
 /******************* 사용자 함수 ********************/
 
@@ -96,6 +217,11 @@ $(".main-wrap > .bt-next").click(onMainNext);
 function onResize() {
 	this.wid = $(this).innerWidth();
 	this.hei = $(this).innerHeight();
+	if(wid > 991) prdLeft = -25;
+	else if(wid > 767) prdLeft = -33.3333;
+	else if(wid > 479) prdLeft = -50;
+	else if(wid <= 479) prdLeft = -100;
+	$(".prd-wrap").css("left", prdLeft+"%");
 }
 
 function onScroll() {
