@@ -20,7 +20,7 @@ $btRight.css("right", "2rem");
 /******************* 전역설정 ********************/
 //Slide.scale(".main-wrap", ".banner", onComplete);
 //Slide.scale(".main-wrap2", ".banner", onComplete);
-var KAKAO_KEY = '12e6cd485768844b777a5601478249ce';
+var KAKAO_KEY = '32029a7749fd11da301a43a23f4cf61b';
 
 
 /******************* 슬라이드 객체형 ********************/
@@ -208,6 +208,71 @@ function onMenuLoad(r) {
 	}
 }
 
+/******************* News 동적 생성 및 슬라이드 ********************/
+var newsNow = 0,  newsSize = 5, newsLast, newsLeft, newsTar;
+var newss = [], newsArr = [];
+$(".news-wrapper > .bt-left").click(onNewsLeft);
+$(".news-wrapper > .bt-right").click(onNewsRight);
+
+$.get("../json/news.json", onnewsLoad);
+function onnewsLoad(r) {
+	console.log(r.news);
+	newsLast = r.news.length - 1;
+	var html = '';
+	for(var i in r.news) {
+		html  = '<li class="news">';
+		html += '<div class="news-img">';
+		html += '<img src="'+r.news[i].src+'" class="img">';
+		html += '<div class="badge-tag">';
+		for(var j in r.news[i].badge) {
+			html += '<div class="badge">'+r.news[i].badge[j]+'</div>';
+		}
+		html += '</div>';
+		html += '<div class="badge-date">';
+		html += '<div class="month">'+moment(r.news[i].date).format('MMM')+'</div>';
+		html += '<div class="day">'+moment(r.news[i].date).format('DD')+'</div>';
+		html += '</div>';
+		html += '</div>';
+		html += '<div class="news-title">'+r.news[i].title+'</div>';
+		html += '<div class="news-tag">';
+		for(var j in r.news[i].tag) {
+			html += '<span class="tag">'+r.news[i].tag[j]+'</span>';
+		}
+		html += '</div>';
+		html += '<div class="news-cont">'+r.news[i].cont+'</div>';
+		html += '<button class="bt-ghost bt-more">Read more <span>▶</span></button>';
+		html += '</li>';
+		newss.push($(html));		
+	}
+	newsInit();
+}
+
+function newsInit() {
+	newsArr = [];
+	newsArr[1] = newsNow;
+	newsArr[0] = (newsNow == 0) ? newsLast : newsNow - 1;
+	for(var i=2; i<newsSize; i++) newsArr[i] = (newsArr[i-1] == newsLast) ? 0 : newsArr[i-1] + 1;
+	for(var i=0; i<newsArr.length; i++) $(newss[newsArr[i]]).clone().appendTo(".news-wrap");
+}
+
+function onNewsLeft() {
+	newsTar = 0;
+	newsNow = (newsNow == 0) ? newsLast : newsNow - 1;
+	newsAni();
+}
+
+function onNewsRight() {
+	newsTar = newsLeft * 2 + "%";
+	newsNow = (newsNow == newsLast) ? 0 : newsNow + 1;
+	newsAni();
+}
+
+function newsAni() {
+	$(".news-wrap").stop().animate({"left": newsTar}, 500, function(){
+		$(this).empty().css({"left": newsLeft+"%"});
+		newsInit();
+	});
+}
 
 /******************* 사용자 함수 ********************/
 
@@ -217,11 +282,24 @@ function onMenuLoad(r) {
 function onResize() {
 	this.wid = $(this).innerWidth();
 	this.hei = $(this).innerHeight();
-	if(wid > 991) prdLeft = -25;
-	else if(wid > 767) prdLeft = -33.3333;
-	else if(wid > 479) prdLeft = -50;
-	else if(wid <= 479) prdLeft = -100;
+	if(wid > 991) {
+		prdLeft = -25;
+		newsLeft = -33.3333;
+	}
+	else if(wid > 767) {
+		prdLeft = -33.3333;
+		newsLeft = -50;
+	}
+	else if(wid > 479) {
+		prdLeft = -50;
+		newsLeft = -100;
+	}
+	else if(wid <= 479) {
+		prdLeft = -100;
+		newsLeft = -100;
+	}
 	$(".prd-wrap").css("left", prdLeft+"%");
+	$(".news-wrap").css("left", newsLeft+"%");
 }
 
 function onScroll() {
